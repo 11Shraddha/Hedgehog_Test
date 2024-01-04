@@ -18,8 +18,8 @@ class HomeListFailure extends HomeState {
   HomeListFailure({required this.apiError});
 }
 
-class HomeSearchSuccess extends HomeState {
-  final List<ImgurImages> filteredImages;
+// class HomeSearchSuccess extends HomeState {
+//   final List<ImgurImages> filteredImages;
 
-  HomeSearchSuccess(this.filteredImages);
-}
+//   HomeSearchSuccess(this.filteredImages);
+// }

@@ -36,8 +36,11 @@ class ImageListView extends StatefulWidget {
 class ImageListViewState extends State<ImageListView> {
   bool _isLoading = false;
   List<ImgurImage> imageList = [];
+  // List<ImgurImage> searchResultList = [];
   var mPageCount = 0;
   late ScrollController _controller;
+  String searchQuery = '';
+  TextEditingController _searchController = TextEditingController();
 
   _scrollListener() {
     if (_controller.offset >= _controller.position.maxScrollExtent &&
@@ -58,6 +61,7 @@ class ImageListViewState extends State<ImageListView> {
   @override
   void dispose() {
     _controller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -67,7 +71,8 @@ class ImageListViewState extends State<ImageListView> {
       _isLoading = true;
       setState(() {});
 
-      BlocProvider.of<HomeBloc>(context).add(FetchTopImages(page: mPageCount));
+      BlocProvider.of<HomeBloc>(context)
+          .add(FetchTopImages(page: mPageCount, searchQuery: searchQuery));
     }
   }
 
@@ -82,6 +87,9 @@ class ImageListViewState extends State<ImageListView> {
         } else if (state is HomeListSuccess) {
           setState(() {
             _isLoading = false;
+            if (mPageCount == 1) {
+              imageList = [];
+            }
             for (var value in state.images.images) {
               if ((value.itemType?.isNotEmpty ?? false) &&
                   (value.link?.isNotEmpty ?? false)) {
@@ -89,8 +97,6 @@ class ImageListViewState extends State<ImageListView> {
               }
             }
           });
-        } else if (state is HomeSearchSuccess) {
-          setState(() {});
         } else if ((state is HomeListFailure)) {
           setState(() {
             _isLoading = false;
@@ -120,15 +126,24 @@ class ImageListViewState extends State<ImageListView> {
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Card(
-        child: TextField(
-          onChanged: (query) {
-            // BlocProvider.of<HomeBloc>(context)
-            //     .add(Search(query: query, allImage: imageList));
-          },
-          decoration: const InputDecoration(
-            labelText: 'Search Images',
-            hintText: 'Enter image name...',
+      child: TextField(
+        controller: _searchController,
+        onSubmitted: (query) {
+          searchQuery = query;
+          mPageCount = 0;
+          _fetchImages();
+        },
+        decoration: InputDecoration(
+          labelText: 'Search Images',
+          hintText: 'Enter image name...',
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              _searchController.clear();
+              searchQuery = '';
+              mPageCount = 0;
+              _fetchImages();
+            },
           ),
         ),
       ),

@@ -4,7 +4,8 @@ abstract class HomeEvent {}
 
 class FetchTopImages extends HomeEvent {
   final int page;
-  FetchTopImages({required this.page});
+  final String searchQuery;
+  FetchTopImages({required this.page, required this.searchQuery});
 }
 
 class ResetImagesEvent extends HomeEvent {}

@@ -15,13 +15,15 @@ enum ApiUrls {
 extension ApiUrlsExtension on ApiUrls {
   static const baseUrl = "https://api.imgur.com/3/";
 
-  String url({dynamic parameter}) {
+  String url({int? pageNumber, String? searchQuery}) {
     switch (this) {
       case ApiUrls.topImageList:
-        print('------full url');
-        print(
-            '${baseUrl}gallery/search/top/${parameter}1?q_type=jpg&q_size_px=med&q=popular');
-        return '${baseUrl}gallery/search/top/${parameter}1?q_type=jpg&q_size_px=med&q=popular';
+        if (searchQuery?.isEmpty ?? true) {
+          return '${baseUrl}gallery/search/top/${pageNumber ?? 0}?q_size_px=med&q=popular';
+        } else {
+          return '${baseUrl}gallery/search/top/${pageNumber ?? 0}?q=$searchQuery';
+        }
+
       default:
         return "";
     }
@@ -57,8 +59,8 @@ class APIService {
       final response = await httpClient.get(Uri.parse(apiUrl), headers: {
         HttpHeaders.authorizationHeader: "Client-ID a3a6968e00f4732"
       });
-      // print('----------------------get api response----------------');
-      // print(response.body);
+      print('----------------------get api $apiUrl----------------');
+      print(response.body);
 
       final jsonData = json.decode(response.body);
       return jsonData;

@@ -15,9 +15,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   void _getImageList(FetchTopImages event, Emitter<HomeState> emit) async {
     emit(HomeListLoading());
     try {
-      final images = await apiService
-          .get(ApiUrls.topImageList.url(parameter: event.page), {});
+      final images = await apiService.get(
+          ApiUrls.topImageList
+              .url(pageNumber: event.page, searchQuery: event.searchQuery),
+          {});
       var data = ImgurImages.fromJson(images);
+      print(data.images.length);
       emit(HomeListSuccess(data));
     } catch (e) {
       emit(HomeListFailure(apiError: 'Failed to load images'));
