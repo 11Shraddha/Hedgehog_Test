@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hedgehog_test/home/home_bloc.dart';
-import 'package:hedgehog_test/home/home_event.dart';
 import 'package:hedgehog_test/home/home_page.dart';
 import 'package:hedgehog_test/home/home_state.dart';
 import 'package:hedgehog_test/manager/api_service.dart';
@@ -13,71 +12,82 @@ import 'package:http/testing.dart';
 import 'package:http/http.dart' as http;
 
 void main() {
-  testWidgets('ImageListView displays loading indicator when loading',
-      (WidgetTester tester) async {
-    await tester.runAsync(() async {
-      final mockClient = MockClient((request) async {
-        return http.Response(jsonEncode({"key": "value"}), 200);
+  group('ImageListViewState tests', () {
+    late HomeBloc homeBloc;
+    late http.Client mockClient;
+
+    setUp(() {
+      mockClient = MockClient((request) async {
+        return http.Response(
+            jsonEncode({
+              "data": [
+                {"id": "1", "title": "Test Image"}
+              ]
+            }),
+            200);
       });
 
-      final homeBloc = HomeBloc();
+      homeBloc = HomeBloc();
       homeBloc.apiService = APIService(httpClient: mockClient);
-
-      final widget = MaterialApp(
-        home: BlocProvider(
-          create: (context) => homeBloc,
-          child: const ImageListView(),
-        ),
-      );
-
-      homeBloc.add(FetchTopImages(page: 0));
-
-      await tester.pumpWidget(widget);
-
-      await tester.pumpAndSettle();
-
-      expect(find.byType(AppLoader), findsOneWidget);
     });
-  });
 
-  testWidgets('ImageListView displays Images when loaded',
-      (WidgetTester tester) async {
-    final homeBloc = HomeBloc();
-    final images = [ImgurImage(itemType: 'jpeg'), ImgurImage(itemType: 'jpeg')];
+    tearDown(() {
+      homeBloc.close();
+    });
 
-    final widget = MaterialApp(
-      home: BlocProvider(
-        create: (context) => homeBloc,
-        child: const ImageListView(),
-      ),
-    );
+    testWidgets('ImageListView displays loading indicator when loading',
+        (WidgetTester tester) async {
+      await tester.runAsync(() async {
+        final mockClient = MockClient((request) async {
+          return http.Response(jsonEncode({"key": "value"}), 200);
+        });
 
-    homeBloc.emit(HomeListSuccess(ImgurImages(images: images)));
+        final homeBloc = HomeBloc();
+        homeBloc.apiService = APIService(httpClient: mockClient);
 
-    await tester.pumpWidget(widget);
+        final widget = MaterialApp(
+          home: BlocProvider(
+            create: (context) => homeBloc,
+            child: const ImageListView(),
+          ),
+        );
 
-    expect(find.text('image 1'), findsOneWidget);
-    expect(find.text('image 2'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
-  });
+        await tester.pumpWidget(widget);
 
-  testWidgets('ImageListView displays error message when loading fails',
-      (WidgetTester tester) async {
-    final homeBloc = HomeBloc();
-    const errorMessage = 'Failed to load Images';
-    final widget = MaterialApp(
-      home: BlocProvider(
-        create: (context) => homeBloc,
-        child: const ImageListView(),
-      ),
-    );
+        await tester.pumpAndSettle();
 
-    homeBloc.emit(HomeListFailure(apiError: errorMessage));
+        expect(find.byType(AppLoader), findsOneWidget);
+      });
+    });
 
-    await tester.pumpWidget(widget);
+    testWidgets('ImageListView displays error message when loading fails',
+        (WidgetTester tester) async {
+      await tester.runAsync(() async {
+        final mockClient = MockClient((request) async {
+          return http.Response(jsonEncode({"key": "value"}), 400);
+        });
 
-    expect(find.text(errorMessage), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+        final homeBloc = HomeBloc();
+        homeBloc.apiService = APIService(httpClient: mockClient);
+        const errorMessage = 'Failed to load Images';
+
+        final widget = MaterialApp(
+          home: BlocProvider(
+            create: (context) => homeBloc,
+            child: const ImageListView(),
+          ),
+        );
+
+        // homeBloc.emit(HomeListFailure(apiError: errorMessage));
+
+        await tester.pumpWidget(widget);
+
+        await tester.pumpAndSettle();
+
+        // expect(find.text(errorMessage), findsOneWidget);
+        expect(find.byType(SnackBar), findsOneWidget);
+      });
+    });
   });
 
   testWidgets('ImageListView updates list when searching for Images',

@@ -48,7 +48,7 @@ class ImgurImage {
       this.tags,
       this.inMostViral,
       this.images,
-      required this.itemType});
+      this.itemType});
 
   factory ImgurImage.fromJson(Map<String, dynamic> json) {
     return ImgurImage(

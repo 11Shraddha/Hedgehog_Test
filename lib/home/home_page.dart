@@ -37,23 +37,23 @@ class ImageListView extends StatefulWidget {
 class ImageListViewState extends State<ImageListView> {
   bool _isLoading = false;
   List<ImgurImage> imageList = [];
-  // List<ImgurImage> searchResultList = [];
   var mPageCount = 0;
-  late ScrollController _controller;
+  late ScrollController _scrollController;
   String searchQuery = '';
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   _scrollListener() {
-    if (_controller.offset >= _controller.position.maxScrollExtent &&
-        !_controller.position.outOfRange) {
+    if (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent &&
+        !_scrollController.position.outOfRange) {
       _fetchImages();
     }
   }
 
   @override
   void initState() {
-    _controller = ScrollController();
-    _controller.addListener(_scrollListener);
+    _scrollController = ScrollController();
+    _scrollController.addListener(_scrollListener);
 
     super.initState();
     _fetchImages();
@@ -61,7 +61,7 @@ class ImageListViewState extends State<ImageListView> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _scrollController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -79,47 +79,53 @@ class ImageListViewState extends State<ImageListView> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<HomeBloc, HomeState>(
-      listener: (context, state) {
-        if (state is HomeListLoading) {
-          setState(() {
-            _isLoading = true;
-          });
-        } else if (state is HomeListSuccess) {
-          setState(() {
-            _isLoading = false;
-            if (mPageCount == 1) {
-              imageList = [];
-            }
-            for (var value in state.images.images) {
-              if ((value.itemType?.isNotEmpty ?? false) &&
-                  (value.link?.isNotEmpty ?? false)) {
-                imageList.add(value);
+    return Scaffold(
+      body: BlocListener<HomeBloc, HomeState>(
+        listener: (context, state) {
+          if (state is HomeListLoading) {
+            setState(() {
+              _isLoading = true;
+            });
+          } else if (state is HomeListSuccess) {
+            setState(() {
+              _isLoading = false;
+              if (mPageCount == 1) {
+                imageList = [];
               }
-            }
-          });
-        } else if ((state is HomeListFailure)) {
-          setState(() {
-            _isLoading = false;
+              for (var value in state.images.images) {
+                if ((value.itemType?.isNotEmpty ?? false) &&
+                    (value.link?.isNotEmpty ?? false)) {
+                  imageList.add(value);
+                }
+              }
+            });
+          } else if ((state is HomeListFailure)) {
+            setState(() {
+              _isLoading = false;
 
-            if (mPageCount > 0) {
-              mPageCount--;
-            }
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.apiError),
-              duration: const Duration(seconds: 1),
+              if (mPageCount > 0) {
+                mPageCount--;
+              }
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.apiError),
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          }
+        },
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                _buildSearchBar(),
+                _buildListView(),
+              ],
             ),
-          );
-        }
-      },
-      child: Column(
-        children: [
-          _buildSearchBar(),
-          _buildListView(),
-          AppLoader(isLoading: _isLoading)
-        ],
+            AppLoader(isLoading: _isLoading)
+          ],
+        ),
       ),
     );
   }
@@ -154,7 +160,7 @@ class ImageListViewState extends State<ImageListView> {
   Widget _buildListView() {
     return Expanded(
       child: ListView(
-        controller: _controller,
+        controller: _scrollController,
         children: List.generate(
           imageList.length,
           (index) {

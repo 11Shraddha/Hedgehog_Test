@@ -12,7 +12,7 @@ void main() {
       });
 
       final response = await APIService(httpClient: mockClient).post(
-        ApiUrls.topImageList.url(parameter: 10),
+        ApiUrls.topImageList.url(pageNumber: 1, searchQuery: 'search'),
         {'key': 'value'},
       );
 
@@ -25,8 +25,8 @@ void main() {
         return http.Response(jsonEncode({"key": "value"}), 200);
       });
 
-      final response = await APIService(httpClient: mockClient)
-          .get(ApiUrls.topImageList.url(parameter: 10), {});
+      final response = await APIService(httpClient: mockClient).get(
+          ApiUrls.topImageList.url(pageNumber: 1, searchQuery: 'search'), {});
 
       expect(response, isNotNull);
       expect(response['key'], 'value');
