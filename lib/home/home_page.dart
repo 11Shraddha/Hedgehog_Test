@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hedgehog_test/home/home_bloc.dart';
 import 'package:hedgehog_test/home/home_event.dart';
 import 'package:hedgehog_test/home/home_state.dart';
+import 'package:hedgehog_test/image_detail/image_detail_page.dart';
 import 'package:hedgehog_test/models/image_model.dart';
 import 'package:hedgehog_test/views/app_loader.dart';
 
@@ -158,8 +159,6 @@ class ImageListViewState extends State<ImageListView> {
           imageList.length,
           (index) {
             var image = imageList[index];
-            print('--------------------$index--------------------');
-            print(image.link);
             return _buildTileView(image);
           },
         ),
@@ -169,9 +168,11 @@ class ImageListViewState extends State<ImageListView> {
 
   Widget _buildTileView(ImgurImage image) {
     return ListTile(
+      onTap: () {
+        _navigateToDetailPage(image);
+      },
       leading: SizedBox(
-        width: 100,
-        height: 100,
+        width: MediaQuery.of(context).size.width * 0.25,
         child: FadeInImage.assetNetwork(
           placeholder: 'assets/placeholder.jpg',
           image: image.link ?? '',
@@ -179,6 +180,15 @@ class ImageListViewState extends State<ImageListView> {
         ),
       ),
       title: Text(image.title ?? ''),
+    );
+  }
+
+  _navigateToDetailPage(ImgurImage image) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ImageDetailPage(imgurImage: image),
+      ),
     );
   }
 }
